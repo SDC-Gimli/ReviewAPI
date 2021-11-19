@@ -80,9 +80,9 @@ app.post('/reviews', async (req, res) => {
   //insert characteristics to characteristics_reviews
   if (Object.keys(characteristics).length !== 0) {
     for (let i = 0; i < Object.keys(characteristics).length; i++) {
-      console.log(`SELECT id FROM characteristics Where product_id=${product_id} AND name=${Object.keys(characteristics)[i]};`)
-      let char_id = await db.query(`SELECT id FROM characteristics Where product_id=${product_id} AND name=${Object.keys(characteristics)[i]};`);
-      await db.none(`INSERT INTO characteristic_reviews (id, characteristic_id, review_id, value) VALUES ($1,$2,$3)`, [characteristics_id[0].max + 1 + i, char_id, review_id[0].max + 1, characteristics[Object.keys(characteristics)[i]]])
+      let char_id = await db.query(`SELECT id FROM characteristics Where product_id=${product_id} AND name='${Object.keys(characteristics)[i]}';`);
+      console.log(char_id[0].id);
+      await db.none(`INSERT INTO characteristic_reviews (id, characteristic_id, review_id, value) VALUES ($1,$2,$3,$4)`, [characteristics_id[0].max + 1 + i, char_id[0].id, review_id[0].max + 1, characteristics[Object.keys(characteristics)[i]]])
         .then(() => {
           console.log("photo insert sucess")
         }).catch((err) => { console.log(err) })
@@ -91,6 +91,8 @@ app.post('/reviews', async (req, res) => {
   }
 
 })
+
+
 app.put("/reviews/helpful", ((req, res) => {
   const review_id = req.query.review_id;
   const query = `UPDATE reviews
