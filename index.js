@@ -3,11 +3,11 @@ const axios = require('axios');
 const PORT = 3000;
 const app = express();
 const db = require('./database');
+require ('regenerator-runtime/runtime')
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.get("/reviews", (req, res) => {
-  console.log(req.query.product_id);
-  console.log(req.query);
+
   let page = req.query.page || 1;
   let count = req.query.count || 5;
   let sort = ""
@@ -19,7 +19,7 @@ app.get("/reviews", (req, res) => {
       sort = "helpfulness";
       break;
     default:
-      sort = "date";
+      sort = "summary";
   }
 
   let query = `SELECT
@@ -40,14 +40,64 @@ app.get("/reviews", (req, res) => {
    ORDER BY ${sort} desc
    Limit ${count};`
   db.query(query).then((data) => {
-    console.log("sucess query db", data)
+    data.forEach((review)=>{
+      if(review.response==="null"){
+        review.response=null;
+      }
+    })
     res.send(data);
   }).catch((err) => {
     console.log(err);
   })
 });
+
+app.get("/reviews/:product_id/meta", async (req, res) => {
+  const product_id = req.query.product_id;
+  const Output = { product_id };
+  const ratingQuery = `SELECT json_build_object(
+    '1', sum(CASE WHEN reviews.rating = 1 THEN 1 ELSE 0 END),
+    '2', sum(CASE WHEN reviews.rating = 2 THEN 1 ELSE 0 END),
+    '3', sum(CASE WHEN reviews.rating = 3 THEN 1 ELSE 0 END),
+    '4', sum(CASE WHEN reviews.rating = 4 THEN 1 ELSE 0 END),
+    '5', sum(CASE WHEN reviews.rating = 5 THEN 1 ELSE 0 END)) AS ratings
+    FROM
+      reviews WHERE reviews.product_id = ${product_id}
+    GROUP BY
+      reviews.product_id;`;
+  const recommendQuery = `SELECT json_build_object(
+        'true', sum(CASE WHEN reviews.recommend = true THEN 1 ELSE 0 END),
+        'false', sum(CASE WHEN reviews.recommend = false THEN 1 ELSE 0 END)) AS recommended
+        FROM
+          reviews WHERE product_id = ${product_id}
+        GROUP BY
+          reviews.product_id;`
+  const characteristicsQuery = `SELECT characteristic_reviews.characteristic_id, AVG(characteristic_reviews.value), characteristics.name
+      FROM
+        characteristic_reviews
+      INNER JOIN
+        characteristics
+      ON
+        characteristic_reviews.characteristic_id = characteristics.id
+      WHERE
+        product_id = ${product_id}
+      GROUP BY
+        characteristic_reviews.characteristic_id, characteristics.name;`;
+
+  let ratingData = await db.query(ratingQuery).catch((err)=>console.log(err,"get rating Data"));
+  let characteristicsData = await db.query(characteristicsQuery).catch((err)=>console.log(err,"get char Data"));
+  let recommendData = await db.query(recommendQuery).catch((err)=>console.log(err,"get recommend Data"));
+  Output.ratings = ratingData[0].ratings;
+  Output.recommended = recommendData[0].recommended;
+  Output.characteristics = {};
+  characteristicsData.forEach((item) => {
+    Output.characteristics[item.name] = { id: item.characteristic_id, value: (+item.avg).toFixed(4) }
+  })
+
+  res.send(Output);
+})
+
+
 app.post('/reviews', async (req, res) => {
-  //console.log(req.body);
   let {
     rating,
     summary,
@@ -72,25 +122,20 @@ app.post('/reviews', async (req, res) => {
   if (photos.length !== 0) {
     for (let i = 0; i < photos.length; i++) {
       db.none(`INSERT INTO reviews_photos (id, review_id, url) VALUES ($1,$2,$3)`, [photo_id[0].max + 1 + i, review_id[0].max + 1, photos[i]])
-        .then(() => {
-          console.log("photo insert sucess")
-        }).catch((err) => { console.log(err) })
+        .catch((err) => { console.log(err) })
     }
   }
   //insert characteristics to characteristics_reviews
   if (Object.keys(characteristics).length !== 0) {
     for (let i = 0; i < Object.keys(characteristics).length; i++) {
       let char_id = await db.query(`SELECT id FROM characteristics Where product_id=${product_id} AND name='${Object.keys(characteristics)[i]}';`);
-      console.log(char_id[0].id);
       await db.none(`INSERT INTO characteristic_reviews (id, characteristic_id, review_id, value) VALUES ($1,$2,$3,$4)`, [characteristics_id[0].max + 1 + i, char_id[0].id, review_id[0].max + 1, characteristics[Object.keys(characteristics)[i]]])
-        .then(() => {
-          console.log("photo insert sucess")
-        }).catch((err) => { console.log(err) })
+        .catch((err) => { console.log(err) })
     }
-
   }
 
 })
+
 
 
 app.put("/reviews/helpful", ((req, res) => {
@@ -102,7 +147,7 @@ app.put("/reviews/helpful", ((req, res) => {
         review_id = ${review_id};`;
   db.query(query)
     .then(() => {
-      console.log("helpful put req sucess");
+      res.sendStatus(204);
     }).catch(err => console.log(err))
 
 }))
@@ -115,7 +160,7 @@ app.put("/reviews/report", ((req, res) => {
         review_id = ${review_id};`;
   db.query(query)
     .then(() => {
-      console.log("report put req sucess");
+     res.sendStatus(204);
     }).catch(err => console.log(err))
 
 }))

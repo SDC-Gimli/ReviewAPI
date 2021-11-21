@@ -31,3 +31,12 @@ CREATE TABLE IF NOT EXISTS characteristic_reviews (
   review_id INT NOT NULL REFERENCES reviews(id),
   value INT
 );
+
+create index idx_review_id on reviews using hash (review_id);
+create index idx_product_id on reviews using hash (product_id);
+create index idx_photos_url on reviews_photos using hash (url);
+create index idx_photos_review_id on reviews_photos using hash (review_id);
+create index idx_photos_id on reviews_photos using hash (id);
+create index idx_char_product_id on characteristics using hash (product_id);
+create index idx_char_name on characteristics using hash (name);
+create index idx_char_review_characteristic_id on characteristic_reviews using hash (characteristic_id);
