@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS characteristic_reviews (
 
 create index idx_review_id on reviews using hash (review_id);
 create index idx_product_id on reviews using hash (product_id);
+create index idx_product_id_bt on reviews using btree(product_id);
 create index idx_photos_url on reviews_photos using hash (url);
 create index idx_photos_review_id on reviews_photos using hash (review_id);
 create index idx_photos_id on reviews_photos using hash (id);
