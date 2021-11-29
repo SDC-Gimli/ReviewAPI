@@ -11,8 +11,10 @@ const getReviews = (req, res) => {
     case "helpful":
       sort = "helpfulness";
       break;
+    case "relevant":
+        sort = "LENGTH(body)";
     default:
-      sort = "summary";
+      sort = "LENGTH(body)";
   }
 
   let query = `SELECT
@@ -31,7 +33,8 @@ const getReviews = (req, res) => {
    WHERE reviews.product_id=${req.query.product_id}
    GROUP BY reviews.review_id
    ORDER BY ${sort} desc
-   Limit ${count};`
+   LIMIT ${count}
+   OFFSET ${count * (page-1)};`
   db.query(query).then((data) => {
     data.forEach((review) => {
       if (review.response === "null") {
