@@ -35,7 +35,12 @@ const getReviewMeta = async (req, res) => {
   let ratingData = await db.query(ratingQuery).catch((err)=>console.log(err,"get rating Data"));
   let characteristicsData = await db.query(characteristicsQuery).catch((err)=>console.log(err,"get char Data"));
   let recommendData = await db.query(recommendQuery).catch((err)=>console.log(err,"get recommend Data"));
-  Output.ratings = ratingData[0].ratings;
+  if (ratingData[0].ratings===undefined) {Output.ratings = {};}
+  else{
+    Output.ratings = ratingData[0].ratings;
+  }
+
+
   Output.recommended = recommendData[0].recommended;
   Output.characteristics = {};
   characteristicsData.forEach((item) => {
