@@ -3,7 +3,7 @@ Part of a team tasked with building scalable microservices that replaced the leg
 The products microservice was stress tested to ensure the service could handle increased traffic during sales and promotions for the e-commerce platform. All services were tested on EC2 t2.micro instances.
 ## Project Accomplishments
 - Designed a read-optimized Postgres DB achieving queries under 5ms on over 10 million rows of product data
-- Ensured low latency (69ms) and 0.00% error rate for fast reliable consumption of the Products Microservice
+- Ensured low latency (20ms) and 0.00% error rate for fast reliable consumption of the Products Microservice
 - Stress tested microservice to ensure it could handle over 10k requests per second with 0% error rate and low latency response.
 - Utilized K6 and loader.io to pinpoint system bottlenecks in local development and in the cloud (AWS)
 - Implemented Nginx to balance the traffic using a least connection load balancing strategy and caching
