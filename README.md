@@ -15,7 +15,7 @@ The products microservice was stress tested to ensure the service could handle i
 ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
 ![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
 
-## Reviews API
+## Reviews API Endpoints
 
 ### List Reviews
 Returns a list of reviews for a particular product.  This list *does not* include any reported reviews.
